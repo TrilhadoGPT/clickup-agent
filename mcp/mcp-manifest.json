@@ -1,132 +1,162 @@
 {
   "name": "clickup-mcp-server",
-  "version": "1.0.0",
-  "description": "Local MCP server exposing ClickUp tools for CRUD, search, and assignments.",
+  "version": "1.1.0",
+  "description": "MCP server para ClickUp: hierarquia do workspace, tarefas, comentários e membros.",
   "entryPoint": "node mcp/clickup-mcp-server.js",
   "tools": [
     {
-      "name": "get_space",
-      "description": "Fetch a ClickUp space by ID.",
+      "name": "get_workspace_hierarchy",
+      "description": "Recupera Spaces, Folders e Lists do workspace.",
       "inputSchema": {
         "type": "object",
-        "required": ["spaceId"],
         "properties": {
-          "spaceId": { "type": "string", "description": "ClickUp space ID" }
+          "team_id": { "type": "string", "description": "Opcional, usa CLICKUP_TEAM_ID" },
+          "space_name": { "type": "string", "description": "Filtro parcial por Space" },
+          "folder_name": { "type": "string", "description": "Filtro parcial por Folder" },
+          "list_name": { "type": "string", "description": "Filtro parcial por List" },
+          "include_archived": { "type": "boolean", "description": "Incluir arquivados" }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "team_id": { "type": "string" },
+          "spaces": { "type": "array", "items": { "type": "object" } }
         }
       }
     },
     {
       "name": "get_list",
-      "description": "Fetch a ClickUp list by ID.",
+      "description": "Busca detalhes de uma List.",
       "inputSchema": {
         "type": "object",
-        "required": ["listId"],
+        "required": ["list_id"],
         "properties": {
-          "listId": { "type": "string", "description": "ClickUp list ID" }
+          "list_id": { "type": "string" }
         }
-      }
-    },
-    {
-      "name": "get_task",
-      "description": "Fetch a ClickUp task by ID.",
-      "inputSchema": {
-        "type": "object",
-        "required": ["taskId"],
-        "properties": {
-          "taskId": { "type": "string", "description": "ClickUp task ID" }
-        }
-      }
+      },
+      "outputSchema": { "type": "object" }
     },
     {
       "name": "create_task",
-      "description": "Create a task inside a list.",
+      "description": "Cria tarefa em uma List específica.",
       "inputSchema": {
         "type": "object",
-        "required": ["listId", "name"],
+        "required": ["list_id", "name"],
         "properties": {
-          "listId": { "type": "string" },
+          "list_id": { "type": "string" },
           "name": { "type": "string" },
           "description": { "type": "string" },
           "status": { "type": "string" },
           "assignees": { "type": "array", "items": { "type": "string" } },
-          "dueDate": { "type": "integer", "description": "Unix ms" },
+          "due_date": { "type": "integer", "description": "Unix ms" },
           "priority": { "type": "integer" },
-          "tags": { "type": "array", "items": { "type": "string" } },
-          "custom_fields": { "type": "array", "items": { "type": "object" } }
+          "tags": { "type": "array", "items": { "type": "string" } }
         }
-      }
+      },
+      "outputSchema": { "type": "object" }
+    },
+    {
+      "name": "get_task",
+      "description": "Recupera detalhes completos de uma tarefa.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["task_id"],
+        "properties": {
+          "task_id": { "type": "string" }
+        }
+      },
+      "outputSchema": { "type": "object" }
     },
     {
       "name": "update_task",
-      "description": "Update fields on a task.",
+      "description": "Atualiza campos de uma tarefa.",
       "inputSchema": {
         "type": "object",
-        "required": ["taskId"],
+        "required": ["task_id"],
         "properties": {
-          "taskId": { "type": "string" },
+          "task_id": { "type": "string" },
           "name": { "type": "string" },
           "description": { "type": "string" },
           "status": { "type": "string" },
-          "priority": { "type": "integer" },
-          "dueDate": { "type": "integer" },
-          "tags": { "type": "array", "items": { "type": "string" } },
-          "custom_fields": { "type": "array", "items": { "type": "object" } },
           "assignees": { "type": "array", "items": { "type": "string" } },
-          "parent": { "type": "string", "description": "Parent task ID" }
+          "due_date": { "type": "integer" },
+          "priority": { "type": "integer" },
+          "tags": { "type": "array", "items": { "type": "string" } }
         }
-      }
+      },
+      "outputSchema": { "type": "object" }
     },
     {
-      "name": "comment_task",
-      "description": "Add a comment to a task.",
+      "name": "get_workspace_tasks",
+      "description": "Lista tarefas do workspace ou de uma List com filtros.",
       "inputSchema": {
         "type": "object",
-        "required": ["taskId", "text"],
         "properties": {
-          "taskId": { "type": "string" },
-          "text": { "type": "string" }
-        }
-      }
-    },
-    {
-      "name": "change_status",
-      "description": "Change status of a task.",
-      "inputSchema": {
-        "type": "object",
-        "required": ["taskId", "status"],
-        "properties": {
-          "taskId": { "type": "string" },
-          "status": { "type": "string" }
-        }
-      }
-    },
-    {
-      "name": "assign_user",
-      "description": "Assign users to a task.",
-      "inputSchema": {
-        "type": "object",
-        "required": ["taskId", "assignees"],
-        "properties": {
-          "taskId": { "type": "string" },
-          "assignees": { "type": "array", "items": { "type": "string" } }
-        }
-      }
-    },
-    {
-      "name": "search_tasks",
-      "description": "Search tasks within a team.",
-      "inputSchema": {
-        "type": "object",
-        "required": ["teamId", "query"],
-        "properties": {
-          "teamId": { "type": "string", "description": "Fallback to CLICKUP_TEAM_ID" },
-          "query": { "type": "string" },
+          "team_id": { "type": "string", "description": "Opcional, usa CLICKUP_TEAM_ID" },
+          "list_id": { "type": "string", "description": "Se presente, filtra pela List" },
+          "assignees": { "type": "array", "items": { "type": "string" } },
+          "statuses": { "type": "array", "items": { "type": "string" } },
+          "include_closed": { "type": "boolean" },
           "page": { "type": "integer" },
           "order_by": { "type": "string" },
-          "reverse": { "type": "boolean" }
+          "reverse": { "type": "boolean" },
+          "due_date_gt": { "type": "integer" },
+          "due_date_lt": { "type": "integer" }
         }
-      }
+      },
+      "outputSchema": { "type": "object" }
+    },
+    {
+      "name": "get_task_comments",
+      "description": "Lista comentários de uma tarefa.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["task_id"],
+        "properties": {
+          "task_id": { "type": "string" }
+        }
+      },
+      "outputSchema": { "type": "object" }
+    },
+    {
+      "name": "create_task_comment",
+      "description": "Cria um comentário em uma tarefa.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["task_id", "comment_text"],
+        "properties": {
+          "task_id": { "type": "string" },
+          "comment_text": { "type": "string" },
+          "notify_all": { "type": "boolean" }
+        }
+      },
+      "outputSchema": { "type": "object" }
+    },
+    {
+      "name": "get_workspace_members",
+      "description": "Lista membros e convidados do workspace.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "team_id": { "type": "string", "description": "Opcional, usa CLICKUP_TEAM_ID" }
+        }
+      },
+      "outputSchema": { "type": "object" }
+    },
+    {
+      "name": "find_member_by_name",
+      "description": "Busca membro por nome ou email.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": { "type": "string" },
+          "team_id": { "type": "string", "description": "Opcional, usa CLICKUP_TEAM_ID" }
+        }
+      },
+      "outputSchema": { "type": "object" }
     }
   ],
-  "environment": ["CLICKUP_API_TOKEN", "CLICKUP_TEAM_ID", "PORT"]
+  "environment": ["CLICKUP_API_TOKEN", "CLICKUP_API_KEY", "CLICKUP_TEAM_ID", "PORT"]
 }

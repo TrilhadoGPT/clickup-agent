@@ -25,10 +25,17 @@
 - PRs: summary, test/lint output, linked issue, and manifest impact (new tools/permissions/breaking changes).
 
 ## ClickUp MCP Agent: ClickUp Autonomous Operator
-- MCP: server `clickup-mcp-server`; manifest `mcp.clickup.json` declares tools/permissions. Tools must include: `create_space`, `create_folder`, `create_list`, `create_task`, `update_status`, `update_task`, `add_comment`, `assign_user`, `move_task`, `sync_file`, `run_nl_command`.
-- Auth: `CLICKUP_API_TOKEN` with full read/write (Spaces, Folders, Lists, Tasks, Comments, Assignees, Status). Never hardcode tokens; load via env/secrets.
-- Capabilities: create/edit/move/copy spaces/folders/lists/tasks; descriptions/status/priority/due dates; assign members; comments/attachments/subtasks; auto-build hierarchies; query/filter; sync local files and ClickUp; execute natural-language commands; conversation-driven automations.
-- Behavioral rules: confirm destructive actions (delete/rename); validate parents exist or create; read current item before update and apply minimal diff; ask for missing assignee/space/list when ambiguous; avoid renames unless explicit; always return human-readable summaries and diffs.
-- Approvals: create/read/update auto-approved; delete or permission changes require manual approval.
-- Workflows: creation via chat (e.g., "Crie Space CRM IA com listas backlog, sprint, operacional"); sprint intake (convert bullets to tasks in active list, assign defaults); daily sync (query last 24h, report changes); sync uses `config/clickup-sync.json` mapping listId->local path and should avoid overwriting local edits, logging conflicts.
-- Safety & logging: never log tokens; log IDs/status/diffs only; respect rate limits with exponential backoff; validate/sanitize user input; audit critical calls in `logs/` or external collector.
+- MCP: usa o servidor `clickup-mcp-server` definido em `mcp/mcp-manifest.json` (entryPoint `node mcp/clickup-mcp-server.js`). Para qualquer pedido de ClickUp (criar/editar tarefa, listar hierarquia, comentar, membros), SEMPRE chamar as tools MCP do manifest.
+- Auth: `CLICKUP_API_TOKEN` (ou `CLICKUP_API_KEY`) e `CLICKUP_TEAM_ID` via env/secrets; nunca logar ou hardcode tokens.
+- Tools MCP expostas:
+  - Workspace: `get_workspace_hierarchy`, `get_list`
+  - Tasks: `create_task`, `get_task`, `update_task`, `get_workspace_tasks`
+  - Comments: `get_task_comments`, `create_task_comment`
+  - Members: `get_workspace_members`, `find_member_by_name`
+- Regras de operação: confirmar ações destrutivas; validar Space/Folder/List antes de criar/mover; ler estado atual antes de atualizar e aplicar dif mínimo; pedir assignee/space/list quando faltando; evitar renomear sem ordem explícita; respostas sempre em linguagem natural com resumo e IDs relevantes. Criação/leitura/edição auto-aprovadas; exclusões ou mudanças de permissão exigem confirmação explícita.
+- Workflows exemplo:
+  - Novo projeto com listas padrão: usar `get_workspace_hierarchy` para localizar Space/Folder/List, criar listas se necessário e semear tarefas iniciais com `create_task` (ex.: backlog, discovery, kickoff).
+  - Preparar daily: `get_workspace_tasks` filtrando por `assignees` e janela (`due_date_gt/lt`) para listar pendências e próximos passos.
+  - Atualizar status em lote: buscar com `get_workspace_tasks` (por lista/status/assignee), pedir confirmação e aplicar `update_task` em cada `task_id`.
+  - Revisar/registrar decisões: ler com `get_task_comments` e escrever com `create_task_comment` indicando próximos passos ou bloqueios.
+- Segurança e logging: nunca logar tokens; logar apenas IDs/status/diffs; respeitar rate limits com backoff; sanitizar entradas; auditar chamadas críticas em `logs/` ou coletor configurado.
