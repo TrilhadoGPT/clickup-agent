@@ -1,0 +1,132 @@
+{
+  "name": "clickup-mcp-server",
+  "version": "1.0.0",
+  "description": "Local MCP server exposing ClickUp tools for CRUD, search, and assignments.",
+  "entryPoint": "node mcp/clickup-mcp-server.js",
+  "tools": [
+    {
+      "name": "get_space",
+      "description": "Fetch a ClickUp space by ID.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["spaceId"],
+        "properties": {
+          "spaceId": { "type": "string", "description": "ClickUp space ID" }
+        }
+      }
+    },
+    {
+      "name": "get_list",
+      "description": "Fetch a ClickUp list by ID.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["listId"],
+        "properties": {
+          "listId": { "type": "string", "description": "ClickUp list ID" }
+        }
+      }
+    },
+    {
+      "name": "get_task",
+      "description": "Fetch a ClickUp task by ID.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["taskId"],
+        "properties": {
+          "taskId": { "type": "string", "description": "ClickUp task ID" }
+        }
+      }
+    },
+    {
+      "name": "create_task",
+      "description": "Create a task inside a list.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["listId", "name"],
+        "properties": {
+          "listId": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string" },
+          "assignees": { "type": "array", "items": { "type": "string" } },
+          "dueDate": { "type": "integer", "description": "Unix ms" },
+          "priority": { "type": "integer" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "custom_fields": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    },
+    {
+      "name": "update_task",
+      "description": "Update fields on a task.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["taskId"],
+        "properties": {
+          "taskId": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string" },
+          "priority": { "type": "integer" },
+          "dueDate": { "type": "integer" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "custom_fields": { "type": "array", "items": { "type": "object" } },
+          "assignees": { "type": "array", "items": { "type": "string" } },
+          "parent": { "type": "string", "description": "Parent task ID" }
+        }
+      }
+    },
+    {
+      "name": "comment_task",
+      "description": "Add a comment to a task.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["taskId", "text"],
+        "properties": {
+          "taskId": { "type": "string" },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "change_status",
+      "description": "Change status of a task.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["taskId", "status"],
+        "properties": {
+          "taskId": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "assign_user",
+      "description": "Assign users to a task.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["taskId", "assignees"],
+        "properties": {
+          "taskId": { "type": "string" },
+          "assignees": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    {
+      "name": "search_tasks",
+      "description": "Search tasks within a team.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["teamId", "query"],
+        "properties": {
+          "teamId": { "type": "string", "description": "Fallback to CLICKUP_TEAM_ID" },
+          "query": { "type": "string" },
+          "page": { "type": "integer" },
+          "order_by": { "type": "string" },
+          "reverse": { "type": "boolean" }
+        }
+      }
+    }
+  ],
+  "environment": ["CLICKUP_API_TOKEN", "CLICKUP_TEAM_ID", "PORT"]
+}
